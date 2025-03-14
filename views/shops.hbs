@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản Lý Shops</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Danh Sách Shops</h1>
+    
+    <!-- Nút mở modal thêm shop -->
+    <button type="button" class="btn btn-success mb-3" data-toggle="modal" data-target="#addShopModal">
+      Thêm Shop
+    </button>
+    
+    <table class="table table-bordered table-striped">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>Tên Shop</th>
+          <th>Owner</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each shops}}
+          <tr>
+            <td>{{this.id}}</td>
+            <td>{{this.name}}</td>
+            <td>
+              {{!-- Tìm tên owner từ danh sách users --}}
+              {{#each ../users}}
+                {{#if (eq this.id ../this.owner_id)}}
+                  {{this.name}}
+                {{/if}}
+              {{/each}}
+            </td>
+            <td>
+              <!-- Nút mở modal sửa shop -->
+              <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editShopModal-{{this.id}}">
+                Sửa
+              </button>
+              <!-- Form xóa shop -->
+              <form class="ajax-form d-inline" action="/api/shops/{{this.id}}" method="POST">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa shop này?');">
+                  Xóa
+                </button>
+              </form>
+            </td>
+          </tr>
+          
+          <!-- Modal Sửa Shop -->
+          <div class="modal fade" id="editShopModal-{{this.id}}" tabindex="-1" role="dialog" aria-labelledby="editShopModalLabel-{{this.id}}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <form class="ajax-form" action="/api/shops/{{this.id}}" method="PUT">
+                  <input type="hidden" name="_method" value="PUT">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editShopModalLabel-{{this.id}}">Sửa Shop</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label>Tên Shop</label>
+                      <input type="text" class="form-control" name="name" value="{{this.name}}" required>
+                    </div>
+                    <div class="form-group">
+                      <label>Owner</label>
+                      <select class="form-control" name="owner_id" required>
+                        <option value="">Chọn Owner</option>
+                        {{#each ../users}}
+                          <option value="{{this.id}}" {{#if (eq this.id ../this.owner_id)}}selected{{/if}}>
+                            {{this.name}}
+                          </option>
+                        {{/each}}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+        {{/each}}
+      </tbody>
+    </table>
+    <a href="/admin" class="btn btn-primary">Quay về Dashboard</a>
+  </div>
+  
+  <!-- Modal Thêm Shop -->
+  <div class="modal fade" id="addShopModal" tabindex="-1" role="dialog" aria-labelledby="addShopModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form class="ajax-form" action="/api/shops" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addShopModalLabel">Thêm Shop</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tên Shop</label>
+              <input type="text" class="form-control" name="name" required>
+            </div>
+            <div class="form-group">
+              <label>Owner</label>
+              <select class="form-control" name="owner_id" required>
+                <option value="">Chọn Owner</option>
+                {{#each users}}
+                  <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-success">Thêm Shop</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery đầy đủ (không phải slim) và Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Script xử lý AJAX cho form -->
+  <script>
+    $(document).ready(function(){
+      $('form.ajax-form').submit(function(e){
+        e.preventDefault(); // Ngăn form submit mặc định
+        var $form = $(this);
+        var url = $form.attr('action');
+        // Lấy phương thức từ input _method nếu có, ngược lại lấy method của form
+        var method = $form.find('input[name="_method"]').val() || $form.attr('method');
+        var data = $form.serialize();
+
+        $.ajax({
+          url: url,
+          type: method,
+          data: data,
+          success: function(response) {
+            // Nếu form nằm trong modal, ẩn modal đó
+            $form.closest('.modal').modal('hide');
+            // Reload trang để cập nhật dữ liệu mới (hoặc bạn có thể cập nhật DOM thay vì reload)
+            location.reload();
+          },
+          error: function(err) {
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

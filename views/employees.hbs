@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Quản Lý Nhân Viên</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container mt-4">
+    <h1>Danh Sách Nhân Viên</h1>
+
+    <!-- Nút mở modal thêm nhân viên -->
+    <button type="button" class="btn btn-success mb-3" data-toggle="modal" data-target="#addEmployeeModal">
+      Thêm Nhân Viên
+    </button>
+
+    <table class="table table-bordered table-striped">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>Shop</th>
+          <th>User</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each employees}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>
+            {{!-- Lấy tên shop từ danh sách shops --}}
+            {{#each ../shops}}
+            {{#if (eq this.id ../this.shop_id)}}
+            {{this.name}}
+            {{/if}}
+            {{/each}}
+          </td>
+          <td>
+            {{!-- Lấy tên user từ danh sách users --}}
+            {{#each ../users}}
+            {{#if (eq this.id ../this.user_id)}}
+            {{this.name}}
+            {{/if}}
+            {{/each}}
+          </td>
+          <td>
+            <!-- Nút mở modal sửa nhân viên -->
+            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
+              data-target="#editEmployeeModal-{{this.id}}">
+              Sửa
+            </button>
+            <!-- Form xóa nhân viên -->
+            <form class="ajax-form d-inline" action="/api/employees/{{this.id}}" method="POST">
+              <input type="hidden" name="_method" value="DELETE">
+              <button type="submit" class="btn btn-danger btn-sm"
+                onclick="return confirm('Bạn có chắc muốn xóa nhân viên này?');">
+                Xóa
+              </button>
+            </form>
+          </td>
+        </tr>
+
+        <!-- Modal Sửa Nhân Viên -->
+        <div class="modal fade" id="editEmployeeModal-{{this.id}}" tabindex="-1" role="dialog"
+          aria-labelledby="editEmployeeModalLabel-{{this.id}}" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <form class="ajax-form" action="/api/employees/{{this.id}}" method="PUT">
+                <input type="hidden" name="_method" value="PUT">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editEmployeeModalLabel-{{this.id}}">Sửa Nhân Viên</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label>Shop</label>
+                    <select class="form-control" name="shop_id" required>
+                      <option value="">Chọn Shop</option>
+                      {{#each ../shops}}
+                      <option value="{{this.id}}" {{#if (eq this.id ../this.shop_id)}}selected{{/if}}>
+                        {{this.name}}
+                      </option>
+                      {{/each}}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>User</label>
+                    <select class="form-control" name="user_id" required>
+                      <option value="">Chọn User</option>
+                      {{#each ../users}}
+                      <option value="{{this.id}}" {{#if (eq this.id ../this.user_id)}}selected{{/if}}>
+                        {{this.name}}
+                      </option>
+                      {{/each}}
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                  <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {{/each}}
+      </tbody>
+    </table>
+    <a href="/admin" class="btn btn-primary">Quay về Dashboard</a>
+  </div>
+
+  <!-- Modal Thêm Nhân Viên -->
+  <div class="modal fade" id="addEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="addEmployeeModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form class="ajax-form" action="/api/employees" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addEmployeeModalLabel">Thêm Nhân Viên</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Shop</label>
+              <select class="form-control" name="shop_id" required>
+                <option value="">Chọn Shop</option>
+                {{#each shops}}
+                <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>User</label>
+              <select class="form-control" name="user_id" required>
+                <option value="">Chọn User</option>
+                {{#each users}}
+                <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-success">Thêm Nhân Viên</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery đầy đủ (không phải slim) và Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Script xử lý AJAX cho form -->
+  <script>
+    $(document).ready(function () {
+      $('form.ajax-form').submit(function (e) {
+        e.preventDefault(); // Ngăn hành động submit mặc định
+        var $form = $(this);
+        var url = $form.attr('action');
+        // Lấy phương thức từ input _method nếu có, nếu không thì lấy thuộc tính method của form
+        var method = $form.find('input[name="_method"]').val() || $form.attr('method');
+        var data = $form.serialize();
+
+        $.ajax({
+          url: url,
+          type: method,
+          data: data,
+          success: function (response) {
+            // Ẩn modal nếu form nằm trong modal
+            $form.closest('.modal').modal('hide');
+            // Reload trang để cập nhật dữ liệu mới (hoặc bạn có thể cập nhật DOM theo yêu cầu)
+            location.reload();
+          },
+          error: function (err) {
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

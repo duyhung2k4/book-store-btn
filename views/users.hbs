@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản Lý Users</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Danh Sách Users</h1>
+    
+    <!-- Nút mở modal thêm user -->
+    <button type="button" class="btn btn-success mb-3" data-toggle="modal" data-target="#addUserModal">
+      Thêm User
+    </button>
+    
+    <table class="table table-bordered table-striped">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>Tên User</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each users}}
+          <tr>
+            <td>{{this.id}}</td>
+            <td>{{this.name}}</td>
+            <td>
+              <!-- Nút mở modal sửa user -->
+              <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editUserModal-{{this.id}}">
+                Sửa
+              </button>
+              <!-- Form xóa user -->
+              <form class="ajax-form d-inline" action="/api/users/{{this.id}}" method="POST">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa user này?')">
+                  Xóa
+                </button>
+              </form>
+            </td>
+          </tr>
+          
+          <!-- Modal Sửa User -->
+          <div class="modal fade" id="editUserModal-{{this.id}}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel-{{this.id}}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <form class="ajax-form" action="/api/users/{{this.id}}" method="PUT">
+                  <input type="hidden" name="_method" value="PUT">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel-{{this.id}}">Sửa User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label>Tên User</label>
+                      <input type="text" class="form-control" name="name" value="{{this.name}}" required>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+        {{/each}}
+      </tbody>
+    </table>
+    <a href="/admin" class="btn btn-primary">Quay về Dashboard</a>
+  </div>
+  
+  <!-- Modal Thêm User -->
+  <div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form class="ajax-form" action="/api/users" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addUserModalLabel">Thêm User</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tên User</label>
+              <input type="text" class="form-control" name="name" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-success">Thêm User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery đầy đủ (không phải slim) và Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Script xử lý AJAX cho form -->
+  <script>
+    $(document).ready(function(){
+      $('form.ajax-form').submit(function(e){
+        e.preventDefault(); // Ngăn hành động submit mặc định
+        var $form = $(this);
+        var url = $form.attr('action');
+        // Lấy phương thức từ input _method nếu có, nếu không thì lấy thuộc tính method của form
+        var method = $form.find('input[name="_method"]').val() || $form.attr('method');
+        var data = $form.serialize();
+        
+        $.ajax({
+          url: url,
+          type: method,
+          data: data,
+          success: function(response) {
+            // Ẩn modal nếu form nằm trong modal
+            $form.closest('.modal').modal('hide');
+            // Reload trang để cập nhật dữ liệu mới (hoặc bạn có thể cập nhật DOM theo yêu cầu)
+            location.reload();
+          },
+          error: function(err) {
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
